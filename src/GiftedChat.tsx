@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
   useCallback,
-  MutableRefObject,
 } from 'react'
 import {
   ActionSheetOptions,
@@ -24,6 +23,7 @@ import {
   View,
   ViewStyle,
   LayoutChangeEvent,
+  KeyboardAvoidingView,
 } from 'react-native'
 import { LightboxProps } from 'react-native-lightbox-v2'
 import { v4 as uuidv4 } from 'uuid'
@@ -54,15 +54,6 @@ import { Send, SendProps } from './Send'
 import { SystemMessage, SystemMessageProps } from './SystemMessage'
 import { Time, TimeProps } from './Time'
 import * as utils from './utils'
-import Animated, {
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-  useAnimatedReaction,
-  useSharedValue,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 dayjs.extend(localizedFormat)
 
@@ -153,7 +144,7 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   actionSheet?(): {
     showActionSheetWithOptions: (
       options: ActionSheetOptions,
-      callback: (buttonIndex: number) => void | Promise<void>,
+      callback: (buttonIndex: number) => void | Promise<void>
     ) => void
   }
   /* Callback when a message avatar is tapped */
@@ -220,17 +211,23 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* Callback when the input text changes */
   onInputTextChanged?(text: string): void
   /* Custom parse patterns for react-native-parsed-text used to linking message content (like URLs and phone numbers) */
-  parsePatterns?: (linkStyle?: TextStyle) => { type?: string, pattern?: RegExp, style?: StyleProp<TextStyle> | object, onPress?: unknown, renderText?: unknown }[]
+  parsePatterns?: (linkStyle?: TextStyle) => {
+    type?: string
+    pattern?: RegExp
+    style?: StyleProp<TextStyle> | object
+    onPress?: unknown
+    renderText?: unknown
+  }[]
   onQuickReply?(replies: Reply[]): void
   renderQuickReplies?(
-    quickReplies: QuickRepliesProps<TMessage>,
+    quickReplies: QuickRepliesProps<TMessage>
   ): React.ReactNode
   renderQuickReplySend?(): React.ReactNode
   /* Scroll to bottom custom component */
   scrollToBottomComponent?(): React.ReactNode
   shouldUpdateMessage?(
     props: Message<TMessage>['props'],
-    nextProps: Message<TMessage>['props'],
+    nextProps: Message<TMessage>['props']
   ): boolean
 }
 
@@ -250,7 +247,6 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
     textInputProps,
     renderChatFooter = null,
     renderInputToolbar = null,
-    bottomOffset = 0,
     keyboardShouldPersistTaps = Platform.select({
       ios: 'never',
       android: 'always',
@@ -261,7 +257,6 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
     inverted = true,
     minComposerHeight = MIN_COMPOSER_HEIGHT,
     maxComposerHeight = MAX_COMPOSER_HEIGHT,
-    isStatusBarTranslucentAndroid,
   } = props
 
   const actionSheetRef = useRef<ActionSheetProviderRef>(null)
@@ -276,8 +271,6 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
     [props.textInputRef]
   )
 
-  const isTextInputWasFocused: MutableRefObject<boolean> = useRef(false)
-
   const [isInitialized, setIsInitialized] = useState<boolean>(false)
   const [composerHeight, setComposerHeight] = useState<number>(
     minComposerHeight!
@@ -285,20 +278,7 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
   const [text, setText] = useState<string | undefined>(() => props.text || '')
   const [isTypingDisabled, setIsTypingDisabled] = useState<boolean>(false)
 
-  const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid })
-  const trackingKeyboardMovement = useSharedValue(false)
   const debounceEnableTypingTimeoutId = useRef<ReturnType<typeof setTimeout>>()
-  const insets = useSafeAreaInsets()
-  const keyboardOffsetBottom = useSharedValue(0)
-
-  const contentStyleAnim = useAnimatedStyle(
-    () => ({
-      transform: [
-        { translateY: -keyboard.height.value + keyboardOffsetBottom.value },
-      ],
-    }),
-    [keyboard, keyboardOffsetBottom]
-  )
 
   const getTextFromProp = useCallback(
     (fallback: string) => {
@@ -310,34 +290,6 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
     [props.text]
   )
 
-  /**
-   * Store text input focus status when keyboard hide to retrieve
-   * it afterwards if needed.
-   * `onKeyboardWillHide` may be called twice in sequence so we
-   * make a guard condition (eg. showing image picker)
-   */
-  const handleTextInputFocusWhenKeyboardHide = useCallback(() => {
-    if (!isTextInputWasFocused.current)
-      isTextInputWasFocused.current =
-        textInputRef.current?.isFocused() || false
-  }, [textInputRef])
-
-  /**
-   * Refocus the text input only if it was focused before showing keyboard.
-   * This is needed in some cases (eg. showing image picker).
-   */
-  const handleTextInputFocusWhenKeyboardShow = useCallback(() => {
-    if (
-      textInputRef.current &&
-      isTextInputWasFocused &&
-      !textInputRef.current.isFocused()
-    )
-      textInputRef.current.focus()
-
-    // Reset the indicator since the keyboard is shown
-    isTextInputWasFocused.current = false
-  }, [textInputRef])
-
   const disableTyping = useCallback(() => {
     clearTimeout(debounceEnableTypingTimeoutId.current)
     setIsTypingDisabled(true)
@@ -347,13 +299,6 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
     clearTimeout(debounceEnableTypingTimeoutId.current)
     setIsTypingDisabled(false)
   }, [])
-
-  const debounceEnableTyping = useCallback(() => {
-    clearTimeout(debounceEnableTypingTimeoutId.current)
-    debounceEnableTypingTimeoutId.current = setTimeout(() => {
-      enableTyping()
-    }, 50)
-  }, [enableTyping])
 
   const scrollToBottom = useCallback(
     (isAnimated = true) => {
@@ -556,66 +501,31 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
       setTimeout(() => scrollToBottom(false), 200)
   }, [messages?.length, inverted, scrollToBottom])
 
-  useAnimatedReaction(
-    () => keyboard.height.value,
-    (value, prevValue) => {
-      if (prevValue && value !== prevValue) {
-        const isKeyboardMovingUp = value > prevValue
-        if (isKeyboardMovingUp !== trackingKeyboardMovement.value) {
-          trackingKeyboardMovement.value = isKeyboardMovingUp
-          keyboardOffsetBottom.value = withTiming(
-            isKeyboardMovingUp ? insets.bottom + bottomOffset : 0,
-            {
-              // If `bottomOffset` exists, we change the duration to a smaller value to fix the delay in the keyboard animation speed
-              duration: bottomOffset ? 150 : 400,
-            }
-          )
-
-          if (isKeyboardMovingUp)
-            runOnJS(handleTextInputFocusWhenKeyboardShow)()
-          else
-            runOnJS(handleTextInputFocusWhenKeyboardHide)()
-
-          if (value === 0) {
-            runOnJS(enableTyping)()
-          } else {
-            runOnJS(disableTyping)()
-            runOnJS(debounceEnableTyping)()
-          }
-        }
-      }
-    },
-    [
-      keyboard,
-      trackingKeyboardMovement,
-      insets,
-      handleTextInputFocusWhenKeyboardHide,
-      handleTextInputFocusWhenKeyboardShow,
-      enableTyping,
-      disableTyping,
-      debounceEnableTyping,
-    ]
-  )
-
   return (
     <GiftedChatContext.Provider value={contextValues}>
       <ActionSheetProvider ref={actionSheetRef}>
-        <View
-          testID={TEST_ID.WRAPPER}
-          style={[styles.fill, styles.contentContainer]}
-          onLayout={onInitialLayoutViewLayout}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'android' ? 80 : 0}
+          style={{ flex: 1 }}
         >
-          {isInitialized
-            ? (
-              <Animated.View style={[styles.fill, contentStyleAnim]}>
-                {renderMessages}
-                {inputToolbarFragment}
-              </Animated.View>
-            )
-            : (
-              renderLoading?.()
-            )}
-        </View>
+          <View
+            testID={TEST_ID.WRAPPER}
+            style={[styles.fill, styles.contentContainer]}
+            onLayout={onInitialLayoutViewLayout}
+          >
+            {isInitialized
+              ? (
+                <>
+                  {renderMessages}
+                  {inputToolbarFragment}
+                </>
+              )
+              : (
+                renderLoading?.()
+              )}
+          </View>
+        </KeyboardAvoidingView>
       </ActionSheetProvider>
     </GiftedChatContext.Provider>
   )
