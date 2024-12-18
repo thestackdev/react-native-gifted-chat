@@ -32,10 +32,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  contentContainerStyle: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-  },
   emptyChatContainer: {
     flex: 1,
     transform: [{ scaleY: -1 }],
@@ -45,6 +41,8 @@ const styles = StyleSheet.create({
   },
   listStyle: {
     flex: 1,
+    flexGrow: 1,
+    justifyContent: 'flex-start',
   },
   scrollToBottomStyle: {
     opacity: 0.8,
@@ -333,9 +331,6 @@ export default class MessageContainer<
           automaticallyAdjustContentInsets={false}
           inverted={inverted}
           data={this.props.messages}
-          style={styles.listStyle}
-          // @ts-expect-error - moved to FlashList
-          contentContainerStyle={styles.contentContainerStyle}
           // @ts-expect-error - moved to FlashList
           renderItem={this.renderRow}
           {...this.props.invertibleScrollViewProps}
