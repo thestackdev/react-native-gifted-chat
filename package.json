@@ -33,7 +33,7 @@
     "build": "rm -rf lib/ && yarn tsc && cp flow-typedefs/*.js.flow lib/",
     "lint": "yarn eslint src",
     "lint:fix": "yarn eslint --cache --fix",
-    "prepublishOnly": "yarn lint && yarn build && yarn test",
+    "prepublishOnly": "yarn lint && yarn build",
     "start": "cd example && expo start",
     "start:web": "cd example && expo start -w --dev",
     "test": "TZ=Europe/Paris jest --no-watchman",

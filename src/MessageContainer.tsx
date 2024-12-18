@@ -328,6 +328,7 @@ export default class MessageContainer<
         <FlashList
           ref={this.props.forwardRef}
           extraData={[this.props.extraData, this.props.isTyping]}
+          estimatedItemSize={80}
           keyExtractor={this.keyExtractor}
           automaticallyAdjustContentInsets={false}
           inverted={inverted}
