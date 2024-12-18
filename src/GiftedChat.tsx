@@ -14,7 +14,6 @@ import {
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import {
-  FlatList,
   Platform,
   StyleProp,
   StyleSheet,
@@ -54,12 +53,13 @@ import { Send, SendProps } from './Send'
 import { SystemMessage, SystemMessageProps } from './SystemMessage'
 import { Time, TimeProps } from './Time'
 import * as utils from './utils'
+import { FlashList } from '@shopify/flash-list'
 
 dayjs.extend(localizedFormat)
 
 export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* Message container ref */
-  messageContainerRef?: React.RefObject<FlatList<IMessage>>
+  messageContainerRef?: React.RefObject<FlashList<IMessage>>
   /* text input ref */
   textInputRef?: React.RefObject<TextInput>
   /* Messages to display */
@@ -262,7 +262,7 @@ function GiftedChat<TMessage extends IMessage = IMessage> (
   const actionSheetRef = useRef<ActionSheetProviderRef>(null)
 
   const messageContainerRef = useMemo(
-    () => props.messageContainerRef || createRef<FlatList<IMessage>>(),
+    () => props.messageContainerRef || createRef<FlashList<IMessage>>(),
     [props.messageContainerRef]
   )
 

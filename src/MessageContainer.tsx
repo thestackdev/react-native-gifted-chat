@@ -2,7 +2,6 @@ import React, { RefObject } from 'react'
 import PropTypes from 'prop-types'
 
 import {
-  FlatList,
   View,
   StyleSheet,
   TouchableOpacity,
@@ -23,6 +22,7 @@ import TypingIndicator from './TypingIndicator'
 
 import { StylePropType } from './utils'
 import { warning } from './logging'
+import { FlashList } from '@shopify/flash-list'
 
 const styles = StyleSheet.create({
   container: {
@@ -78,7 +78,7 @@ export interface MessageContainerProps<TMessage extends IMessage> {
   invertibleScrollViewProps?: object
   extraData?: object
   scrollToBottomOffset?: number
-  forwardRef?: RefObject<FlatList<TMessage>>
+  forwardRef?: RefObject<FlashList<TMessage>>
   renderChatEmpty?(): React.ReactNode
   renderFooter?(props: MessageContainerProps<TMessage>): React.ReactNode
   renderMessage?(props: Message['props']): React.ReactElement
@@ -325,7 +325,7 @@ export default class MessageContainer<
           this.props.alignTop ? styles.containerAlignTop : styles.container
         }
       >
-        <FlatList
+        <FlashList
           ref={this.props.forwardRef}
           extraData={[this.props.extraData, this.props.isTyping]}
           keyExtractor={this.keyExtractor}
@@ -333,7 +333,9 @@ export default class MessageContainer<
           inverted={inverted}
           data={this.props.messages}
           style={styles.listStyle}
+          // @ts-expect-error - moved to FlashList
           contentContainerStyle={styles.contentContainerStyle}
+          // @ts-expect-error - moved to FlashList
           renderItem={this.renderRow}
           {...this.props.invertibleScrollViewProps}
           ListEmptyComponent={this.renderChatEmpty}
@@ -346,6 +348,7 @@ export default class MessageContainer<
           onScroll={this.handleOnScroll}
           scrollEventThrottle={100}
           onLayout={this.onLayoutList}
+          // @ts-expect-error - moved to FlashList
           onEndReached={this.onEndReached}
           onEndReachedThreshold={0.1}
           {...this.props.listViewProps}

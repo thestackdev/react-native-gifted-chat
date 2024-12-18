@@ -104,6 +104,7 @@
 ### Install dependencies
 
 Yarn:
+
 ```bash
 yarn add react-native-gifted-chat react-native-reanimated react-native-safe-area-context react-native-get-random-values
 ```
@@ -115,6 +116,7 @@ npm install --save react-native-gifted-chat react-native-reanimated react-native
 ```
 
 Expo
+
 ```bash
 npx expo install react-native-gifted-chat react-native-reanimated react-native-safe-area-context react-native-get-random-values
 ```
@@ -139,13 +141,14 @@ Follow guide: [react-native-reanimated](https://docs.swmansion.com/react-native-
 - You still be able to provide a `video` but you need to provide `renderMessageVideo` prop.
 
 ## Testing
+
 `TEST_ID` is exported as constants that can be used in your testing library of choice
 
 Gifted Chat uses `onLayout` to determine the height of the chat container. To trigger `onLayout` during your tests, you can run the following bits of code.
 
 ```typescript
-const WIDTH = 200; // or any number
-const HEIGHT = 2000; // or any number
+const WIDTH = 200 // or any number
+const HEIGHT = 2000 // or any number
 
 const loadingWrapper = getByTestId(TEST_ID.LOADING_WRAPPER)
 fireEvent(loadingWrapper, 'layout', {
@@ -190,15 +193,15 @@ export function Example() {
   }, [])
 
   const onSend = useCallback((messages = []) => {
-    setMessages(previousMessages =>
-      GiftedChat.append(previousMessages, messages),
+    setMessages((previousMessages) =>
+      GiftedChat.append(previousMessages, messages)
     )
   }, [])
 
   return (
     <GiftedChat
       messages={messages}
-      onSend={messages => onSend(messages)}
+      onSend={(messages) => onSend(messages)}
       user={{
         _id: 1,
       }}
@@ -347,7 +350,7 @@ interface QuickReplies {
 
 ## Props
 
-- **`messageContainerRef`** _(FlatList ref)_ - Ref to the flatlist
+- **`messageContainerRef`** _(FlashList ref)_ - Ref to the flashList
 - **`textInputRef`** _(TextInput ref)_ - Ref to the text input
 - **`messages`** _(Array)_ - Messages to display
 - **`isTyping`** _(Bool)_ - Typing Indicator state; default `false`. If you use`renderFooter` it will override this.
@@ -419,7 +422,7 @@ interface QuickReplies {
  />
 ```
 
-- **`extraData`** _(Object)_ - Extra props for re-rendering FlatList on demand. This will be useful for rendering footer etc.
+- **`extraData`** _(Object)_ - Extra props for re-rendering FlashList on demand. This will be useful for rendering footer etc.
 - **`minComposerHeight`** _(Object)_ - Custom min-height of the composer.
 - **`maxComposerHeight`** _(Object)_ - Custom max height of the composer.
 
@@ -447,7 +450,7 @@ simply implement `onInputTextChanged` to receive typing events and reset events 
 ```js
 <GiftedChat
   text={customText}
-  onInputTextChanged={text => this.setCustomText(text)}
+  onInputTextChanged={(text) => this.setCustomText(text)}
   /* ... */
 />
 ```
@@ -512,7 +515,8 @@ If you use React Navigation, additional handling may be required to account for 
 module.exports = function override(config, env) {
   config.module.rules.push({
     test: /\.js$/,
-    exclude: /node_modules[/\\](?!react-native-gifted-chat|react-native-lightbox|react-native-parsed-text)/,
+    exclude:
+      /node_modules[/\\](?!react-native-gifted-chat|react-native-lightbox|react-native-parsed-text)/,
     use: {
       loader: 'babel-loader',
       options: {
